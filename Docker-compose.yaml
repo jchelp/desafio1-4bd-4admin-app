@@ -1,0 +1,123 @@
+version: '3.8'
+
+volumes:
+  desafio_mongo_vol:
+  desafio_mariadb_vol:
+  desafio_postgresql_vol:
+  desafio_redis_vol:
+  desafio_pgadmin_vol:
+
+networks:
+  desafio_net:
+    driver: bridge
+
+services:
+  mongo:
+    image: mongo:4.4.3
+    ports:
+    - 27017:27017
+    networks:
+      - desafio_net
+    volumes:
+      - desafio_mongo_vol:/data/db  
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongouser
+      MONGO_INITDB_ROOT_PASSWORD: mongopwd
+
+  mariadb:
+    image: mariadb:10.6.4-focal
+    restart: always
+    ports:
+    - 3306:3306
+    networks:
+      - desafio_net
+    volumes:
+      - desafio_mariadb_vol:/var/lib/mysql  
+    environment:
+      MYSQL_ROOT_PASSWORD: mariadb_pwd
+
+  postgresql:
+    container_name: pg_container
+    image: postgres:14.0
+    restart: always
+    ports:
+    - 5432:5432
+    networks:
+      - desafio_net
+    volumes:
+      - desafio_postgresql_vol:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: postgresql_pwd
+      POSTGRES_DB: test_db
+
+  redis:
+    image: redis:6.2.6
+    restart: always
+    ports:
+    - 6379:6379
+    networks:
+      - desafio_net
+    volumes:
+      - desafio_redis_vol:/data
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    ports:
+    - 8081:8081
+    networks:
+      - desafio_net
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: jchelp
+      ME_CONFIG_BASICAUTH_PASSWORD: MongoExpress
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mongouser
+      ME_CONFIG_MONGODB_ADMINPASSWORD: mongopwd
+      ME_CONFIG_MONGODB_URL: mongodb://mongouser:mongopwd@mongo:27017
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    ports:
+    - 8082:80
+    networks:
+      - desafio_net
+    depends_on:
+      - mariadb
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mariadb    
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+    - 8083:80
+    networks:
+      - desafio_net
+    depends_on:
+      - postgresql
+    volumes:
+      - desafio_pgadmin_vol:/var/lib/pgadmin   
+    environment:
+      PGADMIN_DEFAULT_EMAIL: jchelp@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: postgresql_pwd 
+
+  redis-commander:
+    container_name: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    ports:
+    - 8084:8081
+    networks:
+      - desafio_net
+    depends_on:
+      - redis 
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+             
+
+ 
+
